@@ -218,21 +218,47 @@ def process_lifelog(self, entry: LifelogEntry):
 
 ### Multi-User Support
 
-Deploy multiple instances with different configurations:
+Deploy multiple instances with different configurations. This is a conceptual example - additional configuration required:
 
 ```yaml
-# docker-compose.multi-user.yml
+# docker-compose.multi-user.yml (conceptual example)
 services:
   sync-user1:
+    extends:
+      file: docker-compose.yml
+      service: limitless-sync
+    container_name: limitless-memory-sync-user1
     environment:
       - LIMITLESS_API_KEY=${USER1_LIMITLESS_KEY}
+      - MEMORYBOX_API_KEY=${USER1_MEMORYBOX_KEY}
       - MEMORYBOX_BUCKET=user1-lifelogs
+    volumes:
+      - ./data/user1:/app/data
+      - ./logs/user1:/app/logs
+    ports:
+      - "8081:8080"
   
   sync-user2:
+    extends:
+      file: docker-compose.yml
+      service: limitless-sync
+    container_name: limitless-memory-sync-user2
     environment:
       - LIMITLESS_API_KEY=${USER2_LIMITLESS_KEY}
+      - MEMORYBOX_API_KEY=${USER2_MEMORYBOX_KEY}
       - MEMORYBOX_BUCKET=user2-lifelogs
+    volumes:
+      - ./data/user2:/app/data
+      - ./logs/user2:/app/logs
+    ports:
+      - "8082:8080"
 ```
+
+**Note:** Each user instance requires:
+- Separate API keys for both Limitless and Memory Box
+- Unique data and log directories
+- Different host ports for health check endpoints
+- All other required environment variables (see `.env.template`)
 
 ## 🤝 Contributing
 
@@ -264,7 +290,7 @@ pytest tests/
 
 This project integrates with:
 - [Limitless](https://limitless.ai) - Wearable AI device and API
-- [Memory Box](https://github.com/amotivv/memory-box) - Semantic memory storage system
+- [Memory Box](https://memorybox.dev) - Semantic memory storage system by amotivv, inc.
 
 ## 📄 License
 
