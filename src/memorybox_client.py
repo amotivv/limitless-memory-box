@@ -168,8 +168,8 @@ class MemoryBoxClient:
                 elif status == "failed":
                     logger.error(f"Memory {memory_id} processing failed")
                     return False
-                elif status in ["pending", "processing"]:
-                    # Continue polling
+                elif status in ["pending", "processing", "requires_processing"]:
+                    # Continue polling - these are all valid intermediate states
                     await asyncio.sleep(self.config.poll_interval_seconds)
                     continue
                 else:
