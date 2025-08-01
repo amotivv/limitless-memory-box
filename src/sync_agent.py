@@ -398,7 +398,6 @@ Limitless to Memory Box Sync Agent has started successfully.
 **Configuration:**
 - Sync Interval: {self.config.sync_interval_minutes} minutes
 - Timezone: {self.config.timezone}
-- Memory Box Bucket: {self.config.memorybox_bucket}
 
 **Current Statistics:**
 - Total Synced: {stats.get('total_synced', 0)}

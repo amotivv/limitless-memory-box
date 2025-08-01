@@ -1,353 +1,279 @@
-# Limitless to Memory Box Sync Agent
+# 🧠 Limitless to Memory Box Sync Agent
 
-A production-ready Python application that automatically synchronizes lifelog data from the Limitless Pendant to Memory Box, enabling seamless integration between personal conversation capture and semantic memory storage.
+> **Transform your Limitless Pendant conversations into a searchable, semantic memory layer accessible by any AI system**
 
-## Features
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/python-3.11-3776AB?logo=python)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-- **Automated Sync**: Continuous synchronization of new lifelog entries
-- **Incremental Processing**: Avoid duplicate processing through state tracking
-- **Semantic Enhancement**: Intelligent categorization and rich metadata preservation
-- **Production Reliability**: 99%+ uptime with comprehensive error handling
-- **Docker Deployment**: Container-ready for local and cloud deployment
+## 🌟 Overview
 
-## Quick Start
+This sync agent enables you to synchronize your Limitless Pendant lifelog data to Memory Box, creating a **vendor-agnostic semantic memory layer** that can be accessed by any AI system with Memory Box integration.
+
+### Key Benefits
+
+- **🔓 Vendor Independence**: Access your lifelog data from any AI provider with Memory Box support
+- **🧩 Composable Architecture**: Modular design allows extension for additional data sources or consumers
+- **🎯 Semantic Search**: Query your memories using natural language through Memory Box's search API
+- **📊 Full Content**: Stores complete conversation transcripts with metadata
+- **🔐 Data Control**: Your memories are stored in your own Memory Box instance
+
+## 🚀 What It Does
+
+The Limitless to Memory Box Sync Agent continuously synchronizes your Limitless Pendant lifelog data to Memory Box, creating a persistent, searchable memory layer for AI applications.
+
+### Key Features
+
+- **Incremental Sync**: Only processes new lifelogs, preventing duplicates
+- **Intelligent Categorization**: Automatically classifies conversations (meetings, technical discussions, decisions, etc.)
+- **Speaker Attribution**: Preserves who said what in multi-person conversations
+- **Production Ready**: Health checks, monitoring, error handling, and notifications
+- **Full Content Preservation**: Stores complete transcripts with rich metadata
+
+## 🏗️ Architecture
+
+```mermaid
+graph LR
+    A[Limitless Pendant] -->|Lifelogs| B[Sync Agent]
+    B -->|Formatted Memories| C[Memory Box]
+    C -->|Semantic Search| D[Any LLM]
+    
+    subgraph "Sync Agent Components"
+        B1[Rate Limiter]
+        B2[Content Processor]
+        B3[State Tracker]
+        B4[Health Monitor]
+    end
+    
+    B --> B1
+    B --> B2
+    B --> B3
+    B --> B4
+```
+
+## 📦 Installation
 
 ### Prerequisites
 
 - Docker and Docker Compose
-- Limitless API key
-- Memory Box API credentials
-- Mailgun account for notifications
+- Limitless API Key (from [app.limitless.ai](https://app.limitless.ai))
+- Memory Box API Key
+- (Optional) Mailgun API credentials for notifications
 
-### 1. Clone and Setup
+### Quick Start
 
-```bash
-git clone <repository-url>
-cd limitless-memory-box
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/amotivv/limitless-memory-box.git
+   cd limitless-memory-box
+   ```
 
-### 2. Configure Environment
+2. **Configure environment**
+   ```bash
+   cp .env.template .env
+   # Edit .env with your API keys
+   ```
 
-Copy the environment template and fill in your credentials:
+3. **Start the sync agent**
+   ```bash
+   docker-compose up -d
+   ```
 
-```bash
-cp .env.template .env
-```
+4. **Check health status**
+   ```bash
+   curl http://localhost:8080/health | jq '.'
+   ```
 
-Edit `.env` with your API keys:
-
-```bash
-# Limitless API Configuration
-LIMITLESS_API_KEY=your_limitless_api_key_here
-LIMITLESS_API_URL=https://api.limitless.ai
-
-# Memory Box API Configuration
-MEMORYBOX_API_KEY=your_memorybox_token_here
-MEMORYBOX_API_URL=https://memorybox.amotivv.ai
-MEMORYBOX_BUCKET=Limitless-Lifelogs
-
-# Email Notifications (Mailgun)
-MAILGUN_API_KEY=your_mailgun_api_key_here
-MAILGUN_DOMAIN=your-domain.com
-ALERT_EMAIL=alerts@your-domain.com
-```
-
-### 3. Start the Sync Agent
-
-```bash
-docker-compose up -d
-```
-
-### 4. Monitor Status
-
-Check the health endpoint:
-```bash
-curl http://localhost:8080/health
-```
-
-View logs:
-```bash
-docker-compose logs -f limitless-sync
-```
-
-## Architecture
-
-The sync agent follows a modular architecture with the following components:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Limitless to Memory Box Sync Agent           │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  │   Limitless     │    │   Sync Agent    │    │   Memory Box    │
-│  │     API         │◄──►│   (Docker)      │◄──►│     API         │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘
-│                                 │                                │
-│                                 ▼                                │
-│                          ┌─────────────────┐                     │
-│                          │   SQLite DB     │                     │
-│                          │  (Sync State)   │                     │
-│                          └─────────────────┘                     │
-│                                 │                                │
-│                                 ▼                                │
-│                          ┌─────────────────┐                     │
-│                          │   Mailgun       │                     │
-│                          │ (Notifications) │                     │
-│                          └─────────────────┘                     │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Core Components
-
-- **Sync Agent**: Main orchestration logic with scheduling
-- **Limitless Client**: Rate-limited API client with circuit breaker
-- **Memory Box Client**: Status polling and bucket management
-- **Content Processor**: Intelligent categorization and formatting
-- **Database Manager**: SQLite-based state tracking
-- **Notification Manager**: Email alerts via Mailgun
-- **Health Checker**: HTTP endpoints for monitoring
-
-## Configuration
+## 🔧 Configuration
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `LIMITLESS_API_KEY` | Limitless API key | Required |
-| `MEMORYBOX_API_KEY` | Memory Box API token | Required |
-| `MAILGUN_API_KEY` | Mailgun API key | Required |
-| `SYNC_INTERVAL_MINUTES` | Sync frequency | 30 |
-| `TIMEZONE` | Processing timezone | America/Los_Angeles |
-| `LOG_LEVEL` | Logging level | INFO |
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `LIMITLESS_API_KEY` | Your Limitless API key | ✅ |
+| `MEMORYBOX_API_KEY` | Your Memory Box user ID | ✅ |
+| `MEMORYBOX_API_URL` | Memory Box API endpoint | ✅ |
+| `MEMORYBOX_BUCKET` | Bucket name for memories | ✅ |
+| `SYNC_INTERVAL_MINUTES` | How often to sync (default: 30) | ❌ |
+| `TIMEZONE` | Your timezone (default: America/New_York) | ❌ |
 
 ### Advanced Configuration
 
-For production deployments, you can customize:
+See [.env.template](.env.template) for all available options including:
+- Rate limiting controls
+- Notification settings
+- Health check configuration
+- Logging levels
 
-- **Rate Limiting**: `RATE_LIMIT_REQUESTS_PER_MINUTE` (default: 180)
-- **Batch Size**: `BATCH_SIZE` (default: 10)
-- **Polling**: `MAX_POLL_ATTEMPTS`, `POLL_INTERVAL_SECONDS`
-- **Storage**: `DATABASE_PATH`, `LOG_PATH`
-
-## Monitoring
-
-### Health Checks
-
-The agent provides several health check endpoints:
-
-- `GET /health` - Overall health status
-- `GET /health/detailed` - Detailed component status
-- `GET /ready` - Readiness probe
-- `GET /live` - Liveness probe
-
-### Logging
-
-Structured logging with multiple outputs:
-- Console output for Docker logs
-- File logging in `/app/logs/`
-- Separate error log for critical issues
-
-### Email Notifications
-
-Automatic email alerts for:
-- Sync errors and failures
-- Daily summary reports
-- System health issues
-- Startup/shutdown notifications
-
-## Development
-
-### Local Development Setup
-
-1. **Create virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure environment:**
-   ```bash
-   cp .env.template .env
-   # Edit .env with your credentials
-   ```
-
-4. **Run locally:**
-   ```bash
-   python limitless_sync.py
-   ```
-
-### Testing
-
-Run health check:
-```bash
-python health_check.py
-```
-
-Test individual components:
-```bash
-python -m src.limitless_client  # Test Limitless API
-python -m src.memorybox_client  # Test Memory Box API
-python -m src.notifications     # Test email notifications
-```
-
-### Project Structure
-
-```
-limitless-memory-box/
-├── src/                        # Source code
-│   ├── __init__.py
-│   ├── config.py              # Configuration management
-│   ├── models.py              # Data models
-│   ├── database.py            # SQLite database layer
-│   ├── rate_limiter.py        # Rate limiting and resilience
-│   ├── limitless_client.py    # Limitless API client
-│   ├── memorybox_client.py    # Memory Box API client
-│   ├── content_processor.py   # Content analysis and formatting
-│   ├── notifications.py       # Email notification system
-│   ├── health.py              # Health check system
-│   └── sync_agent.py          # Main sync orchestration
-├── memory-bank/               # Memory Bank documentation
-├── limitless_sync.py          # Main entry point
-├── health_check.py            # Standalone health check
-├── Dockerfile                 # Docker configuration
-├── docker-compose.yml         # Docker Compose setup
-├── requirements.txt           # Python dependencies
-├── .env.template             # Environment template
-└── README.md                 # This file
-```
-
-## Deployment
-
-### Docker Deployment (Recommended)
-
-1. **Build and start:**
-   ```bash
-   docker-compose up -d
-   ```
-
-2. **Monitor:**
-   ```bash
-   docker-compose logs -f
-   curl http://localhost:8080/health
-   ```
-
-3. **Update:**
-   ```bash
-   docker-compose pull
-   docker-compose up -d
-   ```
-
-### Cloud Deployment
-
-The agent is designed for cloud deployment on:
-- AWS EC2 with Docker
-- Google Compute Engine
-- Azure Virtual Machines
-- Any Docker-compatible platform
-
-### Production Considerations
-
-- **Persistent Storage**: Ensure `/app/data` and `/app/logs` are persistent
-- **Backup**: Regular backup of SQLite database
-- **Monitoring**: Set up external monitoring of health endpoints
-- **Log Rotation**: Configure log rotation for long-running deployments
-- **Resource Limits**: Adjust memory/CPU limits based on usage
-
-## Troubleshooting
-
-### Common Issues
-
-1. **API Authentication Errors**
-   - Verify API keys in `.env` file
-   - Check API key permissions and expiration
-
-2. **Sync Failures**
-   - Check logs: `docker-compose logs limitless-sync`
-   - Verify network connectivity to APIs
-   - Check Memory Box bucket exists
-
-3. **Email Notifications Not Working**
-   - Verify Mailgun configuration
-   - Check domain verification in Mailgun
-   - Test with: `python -c "from src.notifications import *; ..."`
-
-4. **High Memory Usage**
-   - Adjust batch size: `BATCH_SIZE=5`
-   - Increase sync interval: `SYNC_INTERVAL_MINUTES=60`
-   - Check for memory leaks in logs
-
-### Debug Mode
-
-Enable debug logging:
-```bash
-# In .env file
-LOG_LEVEL=DEBUG
-```
-
-### Database Inspection
-
-Access SQLite database:
-```bash
-docker exec -it limitless-memory-sync sqlite3 /app/data/limitless_sync.db
-```
-
-Useful queries:
-```sql
--- Check sync statistics
-SELECT * FROM sync_state;
-
--- View recent syncs
-SELECT * FROM synced_lifelogs ORDER BY synced_at DESC LIMIT 10;
-
--- Check for errors
-SELECT * FROM sync_errors ORDER BY occurred_at DESC LIMIT 10;
-```
-
-## API Reference
+## 📊 Monitoring
 
 ### Health Check Endpoints
 
-- **GET /health**
-  - Returns overall health status
-  - Status: 200 (healthy) or 503 (unhealthy)
+- `GET /health` - Basic health status
+- `GET /health/detailed` - Detailed system information
+- `GET /health/ready` - Kubernetes readiness probe
+- `GET /health/live` - Kubernetes liveness probe
 
-- **GET /health/detailed**
-  - Returns detailed component status
-  - Includes system metrics and configuration
+### Database Maintenance
 
-- **GET /ready**
-  - Kubernetes readiness probe
-  - Checks if app is ready to serve traffic
+Check sync status:
+```bash
+docker-compose exec limitless-sync sqlite3 /app/data/limitless_sync.db \
+  "SELECT * FROM sync_state;"
+```
 
-- **GET /live**
-  - Kubernetes liveness probe
-  - Simple alive check
+View recent syncs:
+```bash
+docker-compose exec limitless-sync sqlite3 /app/data/limitless_sync.db \
+  "SELECT lifelog_id, title, synced_at FROM synced_lifelogs ORDER BY synced_at DESC LIMIT 10;"
+```
 
-## Contributing
+See [DATABASE_MAINTENANCE.md](DATABASE_MAINTENANCE.md) for comprehensive database management commands.
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+## 🧠 How Memories Are Processed
 
-## License
+### Content Enhancement
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Each lifelog is intelligently processed to maximize searchability and context:
 
-## Support
+```markdown
+# Meeting with Product Team
 
-For support and questions:
-- Check the troubleshooting section
-- Review logs for error details
-- Open an issue on GitHub
+## Metadata
+**Date:** 2025-08-01 14:30
+**Duration:** 45 minutes
+**Type:** MEETING
+**Participants:** John, Sarah, Mike
+
+## Content
+[Full conversation transcript with speaker attribution]
+
+## Key Points
+- Decided to prioritize mobile app development
+- Q3 timeline approved
+- Budget allocated for two additional developers
+
+---
+**Tags:** meeting, product, decision, august-2025, afternoon
+```
+
+### Conversation Types
+
+The system automatically categorizes conversations:
+- **MEETING**: Standups, reviews, planning sessions
+- **TECHNICAL**: Code discussions, debugging, architecture
+- **DECISION**: Strategic choices, planning, conclusions
+- **PERSONAL**: Casual conversations, personal notes
+- **CONVERSATION**: General discussions
+
+## 🔍 Accessing Your Memories
+
+Once synced to Memory Box, your memories can be accessed by any system with Memory Box integration:
+
+### For LLMs
+```python
+# Any LLM with Memory Box access can query your lifelogs
+response = memory_box.search(
+    query="What did we decide about the mobile app?",
+    bucket="your-lifelog-bucket"
+)
+```
+
+### Direct API Access
+```bash
+curl -X GET "https://your-memorybox-url/api/v2/memory" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d "query=meeting+with+product+team"
+```
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+1. **Health check shows unhealthy**
+   - Check logs: `docker-compose logs -f limitless-sync`
+   - Verify API keys are correct
+   - Ensure Memory Box is accessible
+
+2. **No new lifelogs syncing**
+   - Check Limitless API: See [LIMITLESS_API_TROUBLESHOOTING.md](LIMITLESS_API_TROUBLESHOOTING.md)
+   - Verify sync is running: `curl http://localhost:8080/health/detailed`
+
+3. **Rate limiting errors**
+   - The agent handles rate limits automatically
+   - Adjust `RATE_LIMIT_REQUESTS_PER_MINUTE` if needed
+
+## 🚀 Advanced Usage
+
+### Custom Memory Processing
+
+Extend the content processor for custom formatting:
+
+```python
+# src/content_processor.py
+def process_lifelog(self, entry: LifelogEntry):
+    # Add your custom processing logic
+    pass
+```
+
+### Multi-User Support
+
+Deploy multiple instances with different configurations:
+
+```yaml
+# docker-compose.multi-user.yml
+services:
+  sync-user1:
+    environment:
+      - LIMITLESS_API_KEY=${USER1_LIMITLESS_KEY}
+      - MEMORYBOX_BUCKET=user1-lifelogs
+  
+  sync-user2:
+    environment:
+      - LIMITLESS_API_KEY=${USER2_LIMITLESS_KEY}
+      - MEMORYBOX_BUCKET=user2-lifelogs
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run tests
+pytest tests/
+```
+
+## 📈 Future Roadmap
+
+- **Real-time streaming**: Process lifelogs as they're created
+- **Multi-modal support**: Images, audio clips from conversations
+- **Privacy controls**: Fine-grained control over what gets synced
+- **Analytics dashboard**: Visualize your conversation patterns
+- **Additional integrations**: Support for other wearables and data sources
+
+## 🙏 Acknowledgments
+
+This project integrates with:
+- [Limitless](https://limitless.ai) - Wearable AI device and API
+- [Memory Box](https://github.com/amotivv/memory-box) - Semantic memory storage system
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Limitless to Memory Box Sync Agent** - Bridging conversation capture with semantic memory storage.
+<div align="center">
+
+[Report Bug](https://github.com/amotivv/limitless-memory-box/issues) · [Request Feature](https://github.com/amotivv/limitless-memory-box/issues) · [Documentation](https://github.com/amotivv/limitless-memory-box/wiki)
+
+</div>

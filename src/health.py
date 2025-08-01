@@ -146,9 +146,8 @@ class HealthChecker:
         # Configuration check
         checks["configuration"] = await self.check_configuration()
         
-        # API connectivity checks
-        checks["limitless_api"] = await self.check_limitless_api()
-        checks["memorybox_api"] = await self.check_memorybox_api()
+        # Sync activity check (replaces API connectivity checks)
+        checks["sync_activity"] = await self.check_sync_health()
         
         # System resource checks
         checks["disk_space"] = await self.check_disk_space()
@@ -278,6 +277,31 @@ class HealthChecker:
             logger.debug(f"Memory check failed: {e}")
             return True  # Don't fail health check for this
     
+    async def check_sync_health(self) -> bool:
+        """Check if sync is working based on recent activity."""
+        if not self.database:
+            return True  # No database configured, assume healthy
+        
+        try:
+            stats = self.database.get_sync_stats()
+            last_sync = stats.get('last_sync_time')
+            
+            if not last_sync:
+                return True  # No syncs yet, that's okay for a new installation
+            
+            # Parse last sync time
+            from datetime import timedelta
+            last_sync_dt = datetime.fromisoformat(last_sync.replace('Z', '+00:00'))
+            
+            # Consider healthy if synced within last 2 hours
+            # (accounts for 30-minute sync interval with plenty of buffer)
+            cutoff = datetime.now(timezone.utc) - timedelta(hours=2)
+            return last_sync_dt > cutoff
+            
+        except Exception as e:
+            logger.debug(f"Sync health check failed: {e}")
+            return True  # Don't fail health check for this
+    
     async def run_detailed_checks(self) -> Dict[str, Any]:
         """Run detailed system checks."""
         details = {}
@@ -296,28 +320,8 @@ class HealthChecker:
                     "error": str(e)
                 }
         
-        # System resources
-        try:
-            import psutil
-            details["system"] = {
-                "cpu_percent": psutil.cpu_percent(interval=1),
-                "memory_percent": psutil.virtual_memory().percent,
-                "disk_usage": {
-                    "total": psutil.disk_usage('/').total,
-                    "used": psutil.disk_usage('/').used,
-                    "free": psutil.disk_usage('/').free
-                }
-            }
-        except ImportError:
-            details["system"] = {"error": "psutil not available"}
-        except Exception as e:
-            details["system"] = {"error": str(e)}
-        
-        # Configuration details
+        # Configuration details (non-sensitive only)
         details["configuration"] = {
-            "limitless_api_url": self.config.limitless_api_url,
-            "memorybox_api_url": self.config.memorybox_api_url,
-            "memorybox_bucket": self.config.memorybox_bucket,
             "sync_interval_minutes": self.config.sync_interval_minutes,
             "timezone": self.config.timezone
         }
