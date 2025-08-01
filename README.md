@@ -262,7 +262,7 @@ services:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+We welcome contributions! Please open an issue to discuss proposed changes or submit a pull request.
 
 ### Development Setup
 
