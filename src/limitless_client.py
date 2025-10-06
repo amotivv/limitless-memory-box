@@ -90,7 +90,8 @@ class LimitlessClient:
         include_starred_only: bool = False,
         direction: str = "asc",
         include_markdown: bool = True,
-        include_headings: bool = True
+        include_headings: bool = True,
+        include_contents: bool = True
     ) -> List[LifelogEntry]:
         """
         Fetch lifelogs from Limitless API with pagination.
@@ -105,6 +106,8 @@ class LimitlessClient:
             direction: Sort direction ("asc" or "desc")
             include_markdown: Whether to include markdown content
             include_headings: Whether to include headings
+            include_contents: Whether to include structured content segments (default: True)
+                             Note: API automatically excludes contents when >25 results are returned
             
         Returns:
             List of LifelogEntry objects
@@ -112,7 +115,7 @@ class LimitlessClient:
         lifelogs = []
         cursor = None
         fetched_count = 0
-        batch_size = min(self.config.batch_size, 25)  # API limit is 25 per request
+        batch_size = min(self.config.batch_size, 10)  # API limit is 10 per request (per official docs)
         
         logger.info(
             f"Starting lifelog fetch: start_date={start_date}, "
@@ -137,7 +140,8 @@ class LimitlessClient:
                     end_date=end_date,
                     cursor=cursor,
                     limit=current_batch_size,
-                    include_starred_only=include_starred_only
+                    include_starred_only=include_starred_only,
+                    include_contents=include_contents
                 )
                 
                 if not batch["lifelogs"]:
@@ -183,9 +187,15 @@ class LimitlessClient:
         include_starred_only: bool = False,
         direction: str = "asc",
         include_markdown: bool = True,
-        include_headings: bool = True
+        include_headings: bool = True,
+        include_contents: bool = True
     ) -> Dict[str, Any]:
-        """Fetch a single batch of lifelogs."""
+        """
+        Fetch a single batch of lifelogs.
+        
+        Note: The API automatically excludes contents when >25 results are returned,
+        regardless of the includeContents parameter value.
+        """
         
         # Build query parameters following official MCP server patterns
         params = {
@@ -193,7 +203,8 @@ class LimitlessClient:
             "limit": limit,
             "direction": direction,
             "includeMarkdown": str(include_markdown).lower(),
-            "includeHeadings": str(include_headings).lower()
+            "includeHeadings": str(include_headings).lower(),
+            "includeContents": str(include_contents).lower()
         }
         
         # Add search query (following official pattern)
@@ -270,7 +281,8 @@ class LimitlessClient:
                 params={
                     "timezone": self.config.timezone,
                     "includeContents": "true",
-                    "includeMarkdown": "true"
+                    "includeMarkdown": "true",
+                    "includeHeadings": "true"
                 }
             )
             await self._handle_response(response)

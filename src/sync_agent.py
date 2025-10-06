@@ -210,7 +210,8 @@ class SyncAgent:
                 limit=None,  # Fetch all new lifelogs
                 direction="asc",  # Chronological order for sync
                 include_markdown=True,  # Get both markdown and structured content
-                include_headings=True   # Include heading structure
+                include_headings=True,   # Include heading structure
+                include_contents=True    # Include structured content segments for processing
             )
             
             # Filter out already synced lifelogs
